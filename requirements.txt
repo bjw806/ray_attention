@@ -1,0 +1,9 @@
+ray[default,rllib]
+gym-trading-env
+scikit-learn
+torch
+torchvision
+torchaudio
+gputil
+ipywidgets
+jupyterlab
