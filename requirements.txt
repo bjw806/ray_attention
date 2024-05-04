@@ -7,3 +7,5 @@ torchaudio
 gputil
 ipywidgets
 jupyterlab
+openfe
+matplotlib
