@@ -1,3 +1,4 @@
+from ast import Call
 import datetime
 import glob
 import os
@@ -19,6 +20,13 @@ def basic_reward_function(history: History):
     return np.log(
         history["portfolio_valuation", -1] / history["portfolio_valuation", -2]
     )
+
+
+def basic_penalty_function(history: History):
+    position_changes = np.sum(np.diff(history["position"]) != 0)
+    if position_changes < 10:
+        return -10000
+    return 0
 
 
 def reward_only_position_changed(history):
@@ -65,6 +73,7 @@ class DiscretedTradingEnv(gym.Env):
             # dynamic_feature_real_position,
         ],
         reward_function: Callable = reward_only_position_changed,
+        penalty_function: Callable = basic_penalty_function,
         window_size: int = None,
         trading_fees: float = 0.0001,
         borrow_interest_rate: float = 0.00003,
@@ -96,6 +105,7 @@ class DiscretedTradingEnv(gym.Env):
         self.max_episode_duration = max_episode_duration
         self.dynamic_feature_functions = dynamic_feature_functions
         self.reward_function = reward_function
+        self.penalty_function = penalty_function
         self.window_size = window_size
         self._set_df(df)
         self.action_space = spaces.Discrete(len(positions))
@@ -344,10 +354,10 @@ class DiscretedTradingEnv(gym.Env):
         # if self._position != self.positions[position_index]:
         
         self.historical_info["reward", -1] = (
-            -100 if done else (
+            -10000 if done else (
                 self.reward_function(self.historical_info) 
                 if is_position_changed 
-                else 0
+                else self.penalty_function(self.historical_info)
             )
         )
         self.historical_info["PNL", -1] = (
